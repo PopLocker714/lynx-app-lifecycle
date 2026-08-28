@@ -75,6 +75,17 @@ const off = subscribe(({ state }) => console.log(state))
 `NativeModules` exists **only on the background (BTS) thread** and is `undefined` on the
 main thread. Everything here must be called from the background thread.
 
+**The trap:** in ReactLynx, code at **module scope runs on BOTH threads**. So this fails
+every time, on the main thread half:
+
+```ts
+// ❌ top level of a file — also runs on the main thread
+const { state } = getAppState()
+```
+
+Call it from inside a component, from an effect, or from anything that is background-thread
+by construction. The hooks in `@lynx-lab/app-lifecycle/react` already handle this.
+
 ## API
 
 | Function | What it does |

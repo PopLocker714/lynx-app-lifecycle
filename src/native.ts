@@ -35,9 +35,14 @@ export function getNativeModule(): LynxAppLifecycleNative {
 
   if (typeof NativeModules === 'undefined' || NativeModules === null) {
     throw new Error(
-      '@lynx-lab/app-lifecycle: `NativeModules` недоступен. Этот код обязан ' +
-        'выполняться на фоновом потоке (BTS): на главном потоке NativeModules ' +
-        'не существует.'
+      '@lynx-lab/app-lifecycle: `NativeModules` недоступен, значит этот вызов ' +
+        'выполняется на главном потоке.\n' +
+        '  В ReactLynx код в МОДУЛЬНОЙ ОБЛАСТИ выполняется на ОБОИХ потоках, ' +
+        'поэтому вызов на верхнем уровне файла упадёт именно так.\n' +
+        '  Зови изнутри компонента, из useEffect или из любого кода, который ' +
+        'заведомо идёт на фоновом потоке (BTS).\n' +
+        '  Либо возьми хуки из "@lynx-lab/app-lifecycle/react" — они уже ' +
+        'устроены безопасно.'
     )
   }
 

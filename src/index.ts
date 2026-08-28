@@ -56,8 +56,10 @@ export function subscribe(
   const emitter = lynx.getJSModule?.('GlobalEventEmitter')
   if (!emitter) {
     throw new Error(
-      '@lynx-lab/app-lifecycle: GlobalEventEmitter недоступен. Подписка ' +
-        'работает только на фоновом потоке (BTS).'
+      '@lynx-lab/app-lifecycle: GlobalEventEmitter недоступен, значит подписка ' +
+        'идёт с главного потока. Модульная область в ReactLynx выполняется на ' +
+        'обоих потоках: зови из компонента, из useEffect или бери хуки из ' +
+        '"@lynx-lab/app-lifecycle/react".'
     )
   }
   const eventName = native.getEventName()
@@ -97,8 +99,10 @@ export function subscribePageVisibility(
   const core = lynx.getCoreContext?.()
   if (!core) {
     throw new Error(
-      '@lynx-lab/app-lifecycle: lynx.getCoreContext() недоступен. Видимость ' +
-        'страницы читается только на фоновом потоке (BTS).'
+      '@lynx-lab/app-lifecycle: lynx.getCoreContext() недоступен, значит вызов ' +
+        'идёт с главного потока. Модульная область в ReactLynx выполняется на ' +
+        'обоих потоках: зови из компонента, из useEffect или бери хуки из ' +
+        '"@lynx-lab/app-lifecycle/react".'
     )
   }
   const onVisible = (): void => listener('visible')

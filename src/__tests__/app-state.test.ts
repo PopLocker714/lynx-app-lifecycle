@@ -14,6 +14,23 @@ describe('getAppState', () => {
     setNativeModule(null)
     expect(() => getAppState()).toThrowError(/BTS/)
   })
+
+  it('текст ошибки называет и причину, и выход', () => {
+    setNativeModule(null)
+    let message = ''
+    try {
+      getAppState()
+    } catch (e) {
+      message = (e as Error).message
+    }
+    // причина
+    expect(message).toMatch(/главном потоке/)
+    // почему это случилось именно здесь
+    expect(message).toMatch(/МОДУЛЬНОЙ ОБЛАСТИ|обоих потоках/)
+    // что делать
+    expect(message).toMatch(/useEffect/)
+    expect(message).toMatch(/app-lifecycle\/react/)
+  })
 })
 
 describe('subscribe', () => {
