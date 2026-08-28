@@ -17,7 +17,7 @@ jobs:
     name: JS — typecheck, lint, test, pack
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0
@@ -42,7 +42,7 @@ jobs:
     name: Цепочка поставок — audit, дубли, лицензии
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0
@@ -63,7 +63,7 @@ jobs:
     name: Android — компиляция
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: zulu
