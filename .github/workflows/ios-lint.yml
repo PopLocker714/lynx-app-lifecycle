@@ -1,0 +1,28 @@
+name: iOS lint
+
+# Дорогой раннер, поэтому только по изменениям в ios/** и вручную.
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', '.github/workflows/ios-lint.yml']
+  pull_request:
+    paths: ['ios/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  podspec:
+    name: pod lib lint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - run: gem install cocoapods
+      - name: pod lib lint
+        # --allow-warnings: подспек зависит от Lynx, которого нет в кеше CI
+        # как собранного фреймворка; линтуем синтаксис и структуру.
+        run: pod lib lint ios/LynxAppLifecycle.podspec --allow-warnings --no-clean

@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: JS — typecheck, lint, test, pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Cache bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
+      # Тарбол это и есть весь деливерабл: autolink компилирует нативные
+      # исходники у потребителя, поэтому их отсутствие в пакете = мёртвая
+      # библиотека, и заметить это без проверки нельзя.
+      - name: Проверить содержимое тарбола
+        run: node scripts/check-publishable.mjs
+
+  supply-chain:
+    name: Цепочка поставок — audit, дубли, лицензии
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install
+      # Уязвимости в дереве зависимостей. Падает, если найдены.
+      - name: bun audit
+        run: bun audit
+      # Две версии одного пакета в bun.lock это будущий баг, который
+      # воспроизводится только у потребителя. Проверка стоит миллисекунды.
+      - name: bun dedupe --check
+        run: bun dedupe --check
+      # Опенсорсный пакет обязан знать, что он тянет по лицензиям.
+      # Не падает, просто печатает в лог для аудита.
+      - name: bun pm licenses
+        run: bun pm licenses || true
+
+  android:
+    name: Android — компиляция
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: assembleRelease
+        working-directory: android-check
+        run: gradle :lynx-app-lifecycle:assembleRelease --no-daemon --stacktrace
