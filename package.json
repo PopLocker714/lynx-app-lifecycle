@@ -80,7 +80,7 @@
     "@biomejs/biome": "^2.0.0",
     "@lynx-js/react": "^0.125.0",
     "@lynx-js/types": "^4.1.0",
-    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/git": "^10.0.1",
     "conventional-changelog-conventionalcommits": "^9.0.0",
     "semantic-release": "^25.0.9",
