@@ -8,7 +8,7 @@ import com.lynx.jsbridge.LynxContextModule
 import com.lynx.jsbridge.LynxMethod
 import com.lynx.jsbridge.LynxNativeModule
 import com.lynx.react.bridge.JavaOnlyMap
-import com.lynx.tasm.LynxContext
+import com.lynx.tasm.behavior.LynxContext
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Имя глобального события. Дельты, не начальное состояние. */
