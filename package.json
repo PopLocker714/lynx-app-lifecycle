@@ -1,6 +1,6 @@
 {
   "name": "@lynx-lab/app-lifecycle",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "App foreground/background lifecycle for Lynx — the signal Lynx dispatches but never wires to the app, plus free page-visibility events.",
   "license": "MIT",
   "author": "PopLocker714",
