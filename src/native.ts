@@ -35,14 +35,14 @@ export function getNativeModule(): LynxAppLifecycleNative {
 
   if (typeof NativeModules === 'undefined' || NativeModules === null) {
     throw new Error(
-      '@lynx-lab/app-lifecycle: `NativeModules` недоступен, значит этот вызов ' +
-        'выполняется на главном потоке.\n' +
-        '  В ReactLynx код в МОДУЛЬНОЙ ОБЛАСТИ выполняется на ОБОИХ потоках, ' +
-        'поэтому вызов на верхнем уровне файла упадёт именно так.\n' +
-        '  Зови изнутри компонента, из useEffect или из любого кода, который ' +
-        'заведомо идёт на фоновом потоке (BTS).\n' +
-        '  Либо возьми хуки из "@lynx-lab/app-lifecycle/react" — они уже ' +
-        'устроены безопасно.'
+      '@lynx-lab/app-lifecycle: `NativeModules` is unavailable, so this call is ' +
+        'running on the main thread.\n' +
+        '  In ReactLynx, code at MODULE SCOPE runs on BOTH threads, so a call at ' +
+        'the top level of a file fails exactly like this.\n' +
+        '  Call it from inside a component, from useEffect, or from anything that ' +
+        'is background-thread (BTS) by construction.\n' +
+        '  Or use the hooks from "@lynx-lab/app-lifecycle/react" — they already ' +
+        'handle this.'
     )
   }
 
@@ -56,13 +56,15 @@ export function getNativeModule(): LynxAppLifecycleNative {
     typeof candidate.getEventName !== 'function'
   ) {
     throw new Error(
-      `@lynx-lab/app-lifecycle: нативный модуль "${MODULE_NAME}" не зарегистрирован.\n` +
-        '  Android: смотри `adb logcat | grep "Skip unavailable Lynx library provider"`. ' +
-        'Это значит, что процессор аннотаций kapt не отработал: библиотека обязана ' +
-        'объявить id("org.jetbrains.kotlin.kapt") и kapt("org.lynxsdk.lynx:lynx-processor").\n' +
-        '  iOS: проверь, что в Pods/ есть сгенерированный реестр autolink с упоминанием ' +
-        'LynxAppLifecycleModule. Если нет, маркер @LynxNativeModule("...") не сматчился.\n' +
-        '  Ручной запасной путь для обеих платформ описан в README.'
+      `@lynx-lab/app-lifecycle: native module "${MODULE_NAME}" is not registered.\n` +
+        '  Android: check `adb logcat | grep "Skip unavailable Lynx library provider"`. ' +
+        'That message means the kapt annotation processor did not run — the library ' +
+        'must declare id("org.jetbrains.kotlin.kapt") and ' +
+        'kapt("org.lynxsdk.lynx:lynx-processor").\n' +
+        '  iOS: check that Pods/ contains a generated Lynx autolink registry naming ' +
+        'LynxAppLifecycleModule. If not, the @LynxNativeModule("...") marker was not ' +
+        'matched.\n' +
+        '  Manual fallback for both platforms: see the README.'
     )
   }
 

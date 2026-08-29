@@ -38,9 +38,10 @@ const missing = required.filter((f) => !files.includes(f))
 const leaked = files.filter((f) => forbidden.some((re) => re.test(f)))
 
 if (missing.length || leaked.length) {
-  if (missing.length) console.error('НЕТ в тарболе:\n  ' + missing.join('\n  '))
+  if (missing.length)
+    console.error('MISSING from tarball:\n  ' + missing.join('\n  '))
   if (leaked.length)
-    console.error('ЛИШНЕЕ в тарболе:\n  ' + leaked.join('\n  '))
+    console.error('LEAKED into tarball:\n  ' + leaked.join('\n  '))
   process.exit(1)
 }
-console.log(`check-publishable: ok (${files.length} файлов)`)
+console.log(`check-publishable: ok (${files.length} files)`)

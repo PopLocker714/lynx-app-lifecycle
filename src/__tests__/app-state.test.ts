@@ -24,9 +24,9 @@ describe('getAppState', () => {
       message = (e as Error).message
     }
     // причина
-    expect(message).toMatch(/главном потоке/)
+    expect(message).toMatch(/main thread/)
     // почему это случилось именно здесь
-    expect(message).toMatch(/МОДУЛЬНОЙ ОБЛАСТИ|обоих потоках/)
+    expect(message).toMatch(/MODULE SCOPE|BOTH threads/)
     // что делать
     expect(message).toMatch(/useEffect/)
     expect(message).toMatch(/app-lifecycle\/react/)
