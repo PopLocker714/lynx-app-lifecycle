@@ -84,7 +84,7 @@
     "@semantic-release/git": "^10.0.1",
     "conventional-changelog-conventionalcommits": "^9.0.0",
     "semantic-release": "^25.0.9",
-    "typescript": "^5.9.0",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   },
   "publishConfig": {
