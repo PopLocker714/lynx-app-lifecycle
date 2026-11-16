@@ -62,6 +62,7 @@ internal object AppLifecycleStore {
                 override fun onActivityDestroyed(activity: Activity) = Unit
             },
         )
+        publish()
     }
 
     fun snapshot(): LifecycleSnapshot? = current
