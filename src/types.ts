@@ -20,15 +20,7 @@ export interface AppStateSnapshot {
     readonly generation: number
 }
 
-/**
- * Видимость СТРАНИЦЫ Lynx, а не приложения.
- *
- * Приходит из самого Lynx через CoreContext, нативного кода не требует.
- * Срабатывает, когда контейнер этой страницы показан или скрыт: переход
- * по роутеру, возврат назад. При сворачивании приложения НЕ срабатывает —
- * проверено на устройстве, Sparkling зовёт это из onshow/onHide контейнера,
- * а на UIApplication не подписан.
- */
+/** Host page visibility from CoreContext, separate from process app state; see compatibility docs. */
 export type PageVisibility = 'visible' | 'hidden'
 
 export type Unsubscribe = () => void

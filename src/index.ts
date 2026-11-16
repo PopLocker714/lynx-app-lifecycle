@@ -1,5 +1,6 @@
 import { getNativeModule } from './native.js'
-import type { AppState, AppStateSnapshot, PageVisibility, Unsubscribe } from './types.js'
+import { parseSnapshot } from './snapshot.js'
+import type { AppStateSnapshot, PageVisibility, Unsubscribe } from './types.js'
 
 export type { AppStateWire, LynxAppLifecycleNative } from './native.js'
 export { setNativeModule } from './native.js'
@@ -21,32 +22,32 @@ declare const lynx: {
     } | null
 }
 
-let lastGeneration = -1
+let lastKnownGeneration = -1
 
-/**
- * Текущее состояние приложения. Синхронно, всегда авторитетно.
- *
- * Именно этим берётся НАЧАЛЬНОЕ значение. Подписка для этого не годится:
- * глобальные события Lynx дропаются, если рантайм ещё не поднялся, поэтому
- * первое состояние подпиской не приходит никогда.
- */
+/** Read the initialized native snapshot on the background thread. Throws when unavailable or malformed. */
 export function getAppState(): AppStateSnapshot {
-    const wire = getNativeModule().getState()
-    lastGeneration = wire.generation
-    return { state: wire.state, generation: wire.generation }
+    'background only'
+    const value: unknown = getNativeModule().getState()
+    const snapshot = parseSnapshot(value)
+    if (!snapshot) {
+        throw new Error(
+            '@lynx-lab/app-lifecycle: native state is unavailable or malformed. ' +
+                'Ensure native lifecycle initialization has completed before reading the snapshot.'
+        )
+    }
+    lastKnownGeneration = snapshot.generation
+    return snapshot
 }
 
 /**
- * Подписка на смену состояния приложения.
- *
- * Колбэк получает снимок. Если поколение перескочило больше чем на единицу,
- * значит событие потерялось, и вторым аргументом придёт `true` — тогда стоит
- * перечитать состояние самому, если логика зависит от переходов, а не от
- * текущего значения.
+ * Subscribe to transitions on the background thread. Each listener owns its generation cursor.
+ * The second callback argument is true when a generation gap indicates missed transitions.
+ * Read the initial snapshot explicitly: events may be dropped before the JS emitter exists.
  */
 export function subscribe(
     listener: (snapshot: AppStateSnapshot, missedEvents: boolean) => void
 ): Unsubscribe {
+    'background only'
     const native = getNativeModule()
     const emitter = lynx.getJSModule?.('GlobalEventEmitter')
     if (!emitter) {
@@ -57,15 +58,20 @@ export function subscribe(
                 'from "@lynx-lab/app-lifecycle/react".'
         )
     }
-    const eventName = native.getEventName()
+    const eventName: unknown = native.getEventName()
+    if (typeof eventName !== 'string' || eventName.length === 0) {
+        throw new Error('@lynx-lab/app-lifecycle: native event name is malformed')
+    }
 
+    // Each subscriber owns its cursor. A getter or another listener must not consume its gap.
+    let lastGeneration = lastKnownGeneration
     const handler = (...args: unknown[]): void => {
-        const payload = args[0] as { state?: AppState; generation?: number } | undefined
-        if (!payload || typeof payload.state !== 'string') return
-        const generation = typeof payload.generation === 'number' ? payload.generation : -1
-        const missed = lastGeneration >= 0 && generation > lastGeneration + 1
-        lastGeneration = generation
-        listener({ state: payload.state, generation }, missed)
+        const snapshot = parseSnapshot(args[0], true)
+        if (!snapshot) return
+        const missed = lastGeneration >= 0 && snapshot.generation > lastGeneration + 1
+        lastGeneration = snapshot.generation
+        lastKnownGeneration = snapshot.generation
+        listener(snapshot, missed)
     }
 
     emitter.addListener(eventName, handler)
@@ -73,21 +79,13 @@ export function subscribe(
 }
 
 /**
- * Видимость ЭТОЙ СТРАНИЦЫ Lynx. Нативного кода не требует вообще: событие
- * приходит из самого Lynx через CoreContext.
- *
- * ВАЖНО: это НЕ состояние приложения. Срабатывает при показе и скрытии
- * контейнера страницы, а при сворачивании приложения не срабатывает.
- * Проверено на устройстве: Sparkling зовёт это из onshow/onHide контейнера,
- * а на UIApplication не подписан никто. Для «пользователь вернулся из
- * приложения банка» нужен `subscribe`, а не это.
- *
- * Имена событий взяты из `MessageEventType` в исходниках lynx-core; в публичных
- * типах они не объявлены, но `addEventListener` принимает обычную строку.
+ * Observe this page's host CoreContext visibility events, without a native module.
+ * Host page visibility is separate from application foreground/background state.
  */
 export function subscribePageVisibility(
     listener: (visibility: PageVisibility) => void
 ): Unsubscribe {
+    'background only'
     const core = lynx.getCoreContext?.()
     if (!core) {
         throw new Error(

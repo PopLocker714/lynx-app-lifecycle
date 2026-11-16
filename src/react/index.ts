@@ -6,7 +6,7 @@ import type { AppState, AppStateSnapshot, PageVisibility } from '../types.js'
  * Текущее состояние приложения, реактивно.
  *
  * Начальное значение берётся синхронным `getAppState()`, а не ожиданием
- * события: первое событие подпиской не приходит никогда.
+ * события: доставка начального события подпиской не гарантируется.
  */
 export function useAppState(): AppState {
     const [state, setState] = useState<AppState>(() => {
@@ -26,6 +26,8 @@ export function useAppState(): AppState {
             unsubscribe = subscribe((snapshot) => {
                 if (alive) setState(snapshot.state)
             })
+            // A transition can occur after the render initializer but before this effect.
+            setState(getAppState().state)
         } catch {
             /* см. выше */
         }

@@ -7,9 +7,14 @@
         "strict": true,
         "noUncheckedIndexedAccess": true,
         "verbatimModuleSyntax": true,
-        "skipLibCheck": true,
+        "skipLibCheck": false,
         "noEmit": true,
-        "types": ["vitest/globals"]
+        "types": [],
+        "paths": {
+            "preact": ["./node_modules/preact/src/index.d.ts"]
+        }
     },
-    "include": ["src", "vitest.config.ts"]
+    "include": ["src", "types"],
+    "extends": "./tsconfig.strict.json",
+    "exclude": ["src/__tests__"]
 }

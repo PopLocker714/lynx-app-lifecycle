@@ -114,3 +114,92 @@ describe('subscribe', () => {
         off()
     })
 })
+
+describe('snapshot and listener boundaries', () => {
+    it('reports a gap independently to every subscriber', () => {
+        const fake = createFakeLifecycle()
+        setNativeModule(fake)
+        getAppState()
+        const first = vi.fn()
+        const second = vi.fn()
+        const offFirst = subscribe(first)
+        const offSecond = subscribe(second)
+        fake.emitSkipping('background', 3)
+        expect(first).toHaveBeenCalledWith({ state: 'background', generation: 3 }, true)
+        expect(second).toHaveBeenCalledWith({ state: 'background', generation: 3 }, true)
+        offFirst()
+        offSecond()
+    })
+
+    it('a snapshot read in one callback cannot consume another subscriber gap', () => {
+        const fake = createFakeLifecycle()
+        setNativeModule(fake)
+        getAppState()
+        const offFirst = subscribe(() => getAppState())
+        const second = vi.fn()
+        const offSecond = subscribe(second)
+        fake.emitSkipping('background', 4)
+        expect(second).toHaveBeenCalledWith({ state: 'background', generation: 4 }, true)
+        offFirst()
+        offSecond()
+    })
+
+    it.each([
+        { state: 'invalid', generation: 1 },
+        { state: 'active', generation: NaN },
+        { state: 'active', generation: Infinity },
+        { state: 'active', generation: -2 },
+        { state: 'active', generation: 0.5 },
+        { state: 'active', generation: Number.MAX_SAFE_INTEGER + 1 },
+        { state: 'active', generation: '1' },
+        { state: 'active', generation: null },
+    ])('ignores invalid event %# without consuming the cursor', (payload) => {
+        const fake = createFakeLifecycle()
+        setNativeModule(fake)
+        getAppState()
+        const listener = vi.fn()
+        const off = subscribe(listener)
+        fake.emitRaw(payload)
+        expect(listener).not.toHaveBeenCalled()
+        fake.emitSkipping('background', 3)
+        expect(listener).toHaveBeenCalledWith({ state: 'background', generation: 3 }, true)
+        off()
+    })
+
+    it.each([
+        null,
+        {},
+        { error: 'NOT_INITIALIZED' },
+        { state: 'active' },
+        { state: 'invalid', generation: 0 },
+        { state: 'active', generation: NaN },
+    ])('rejects an unavailable or malformed synchronous snapshot %#', (value) => {
+        // The bridge is an untyped transport; this stub intentionally violates its TS contract.
+        const fake = createFakeLifecycle()
+        const getState = vi.fn(() => value)
+        Object.defineProperty(fake, 'getState', { value: getState })
+        setNativeModule(fake)
+        expect(() => getAppState()).toThrow(/unavailable or malformed/)
+    })
+
+    it('preserves the missing-generation sentinel and resets gap tracking', () => {
+        const fake = createFakeLifecycle()
+        setNativeModule(fake)
+        getAppState()
+        const listener = vi.fn()
+        const off = subscribe(listener)
+        fake.emitRaw({ state: 'background' })
+        expect(listener).toHaveBeenLastCalledWith({ state: 'background', generation: -1 }, false)
+        fake.emitSkipping('background', 8)
+        expect(listener).toHaveBeenLastCalledWith({ state: 'background', generation: 8 }, false)
+        off()
+    })
+})
+
+it.each([undefined, null, '', 42])('rejects malformed native event name %#', (value) => {
+    const fake = createFakeLifecycle()
+    Object.defineProperty(fake, 'getEventName', { value: () => value })
+    setNativeModule(fake)
+    expect(() => subscribe(() => {})).toThrow(/event name is malformed/)
+    expect(fake.listenerCount).toBe(0)
+})

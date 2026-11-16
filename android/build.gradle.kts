@@ -21,7 +21,6 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        // SecureRandom это API 1, android.util.Base64 это API 8.
         // Нижнюю границу задаёт Lynx, а не эта библиотека.
         minSdk = 23
         consumerProguardFiles("consumer-rules.pro")
@@ -35,16 +34,34 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    lint {
+        warningsAsErrors = providers.gradleProperty("lynxLifecycleStrictChecks").orNull == "true"
+        abortOnError = true
+    }
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+
     // compileOnly, не implementation: Lynx поставляет хост, а отгрузка его
     // как implementation рискует duplicate-class.
     compileOnly("org.lynxsdk.lynx:lynx:4.0.1")
 
     // Сгенерированный LynxLibraryProviderImpl помечается @androidx.annotation.Keep,
     // поэтому androidx.annotation должен быть на compile classpath.
+    // Preserve the existing host-compatible profile. Owner: Lynx Lab; review by 2026-12-16.
+    //noinspection GradleDependency
     compileOnly("androidx.annotation:annotation:1.9.1")
 
     kapt("org.lynxsdk.lynx:lynx-processor:4.0.1")
+}
+
+if (providers.gradleProperty("lynxLifecycleStrictChecks").orNull == "true") {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            // KGP 2.0.21 kapt supports 1.9; this opt-in affects only standalone checks.
+            languageVersion = "1.9"
+            allWarningsAsErrors = true
+        }
+    }
 }

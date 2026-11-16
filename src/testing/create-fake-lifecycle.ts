@@ -20,7 +20,8 @@ export interface FakeLifecycle extends LynxAppLifecycleNative {
  * Фейк нативного модуля и GlobalEventEmitter для тестов и для работы
  * в Lynx Explorer, где нативной половины ещё нет.
  *
- * Устанавливает `globalThis.lynx.getJSModule` и `getCoreContext`, если их нет.
+ * Replaces `globalThis.lynx.getJSModule` and `getCoreContext` with test emitters.
+ * Callers sharing a runtime must save/restore the original global descriptor.
  */
 export function createFakeLifecycle(initial: AppState = 'active'): FakeLifecycle {
     let state: AppState = initial
