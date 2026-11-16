@@ -1,29 +1,24 @@
 import { getNativeModule } from './native.js'
-import type {
-  AppState,
-  AppStateSnapshot,
-  PageVisibility,
-  Unsubscribe,
-} from './types.js'
+import type { AppState, AppStateSnapshot, PageVisibility, Unsubscribe } from './types.js'
 
 export type { AppStateWire, LynxAppLifecycleNative } from './native.js'
 export { setNativeModule } from './native.js'
 export type {
-  AppState,
-  AppStateSnapshot,
-  PageVisibility,
-  Unsubscribe,
+    AppState,
+    AppStateSnapshot,
+    PageVisibility,
+    Unsubscribe,
 } from './types.js'
 
 declare const lynx: {
-  getJSModule?(name: string): {
-    addListener(name: string, cb: (...args: unknown[]) => void): void
-    removeListener(name: string, cb: (...args: unknown[]) => void): void
-  } | null
-  getCoreContext?(): {
-    addEventListener(type: string, listener: (event: unknown) => void): void
-    removeEventListener(type: string, listener: (event: unknown) => void): void
-  } | null
+    getJSModule?(name: string): {
+        addListener(name: string, cb: (...args: unknown[]) => void): void
+        removeListener(name: string, cb: (...args: unknown[]) => void): void
+    } | null
+    getCoreContext?(): {
+        addEventListener(type: string, listener: (event: unknown) => void): void
+        removeEventListener(type: string, listener: (event: unknown) => void): void
+    } | null
 }
 
 let lastGeneration = -1
@@ -36,9 +31,9 @@ let lastGeneration = -1
  * первое состояние подпиской не приходит никогда.
  */
 export function getAppState(): AppStateSnapshot {
-  const wire = getNativeModule().getState()
-  lastGeneration = wire.generation
-  return { state: wire.state, generation: wire.generation }
+    const wire = getNativeModule().getState()
+    lastGeneration = wire.generation
+    return { state: wire.state, generation: wire.generation }
 }
 
 /**
@@ -50,34 +45,31 @@ export function getAppState(): AppStateSnapshot {
  * текущего значения.
  */
 export function subscribe(
-  listener: (snapshot: AppStateSnapshot, missedEvents: boolean) => void
+    listener: (snapshot: AppStateSnapshot, missedEvents: boolean) => void
 ): Unsubscribe {
-  const native = getNativeModule()
-  const emitter = lynx.getJSModule?.('GlobalEventEmitter')
-  if (!emitter) {
-    throw new Error(
-      '@lynx-lab/app-lifecycle: GlobalEventEmitter is unavailable, so this ' +
-        'subscription is running on the main thread. Module scope in ReactLynx runs ' +
-        'on both threads: call it from a component, from useEffect, or use the hooks ' +
-        'from "@lynx-lab/app-lifecycle/react".'
-    )
-  }
-  const eventName = native.getEventName()
+    const native = getNativeModule()
+    const emitter = lynx.getJSModule?.('GlobalEventEmitter')
+    if (!emitter) {
+        throw new Error(
+            '@lynx-lab/app-lifecycle: GlobalEventEmitter is unavailable, so this ' +
+                'subscription is running on the main thread. Module scope in ReactLynx runs ' +
+                'on both threads: call it from a component, from useEffect, or use the hooks ' +
+                'from "@lynx-lab/app-lifecycle/react".'
+        )
+    }
+    const eventName = native.getEventName()
 
-  const handler = (...args: unknown[]): void => {
-    const payload = args[0] as
-      | { state?: AppState; generation?: number }
-      | undefined
-    if (!payload || typeof payload.state !== 'string') return
-    const generation =
-      typeof payload.generation === 'number' ? payload.generation : -1
-    const missed = lastGeneration >= 0 && generation > lastGeneration + 1
-    lastGeneration = generation
-    listener({ state: payload.state, generation }, missed)
-  }
+    const handler = (...args: unknown[]): void => {
+        const payload = args[0] as { state?: AppState; generation?: number } | undefined
+        if (!payload || typeof payload.state !== 'string') return
+        const generation = typeof payload.generation === 'number' ? payload.generation : -1
+        const missed = lastGeneration >= 0 && generation > lastGeneration + 1
+        lastGeneration = generation
+        listener({ state: payload.state, generation }, missed)
+    }
 
-  emitter.addListener(eventName, handler)
-  return () => emitter.removeListener(eventName, handler)
+    emitter.addListener(eventName, handler)
+    return () => emitter.removeListener(eventName, handler)
 }
 
 /**
@@ -94,25 +86,25 @@ export function subscribe(
  * типах они не объявлены, но `addEventListener` принимает обычную строку.
  */
 export function subscribePageVisibility(
-  listener: (visibility: PageVisibility) => void
+    listener: (visibility: PageVisibility) => void
 ): Unsubscribe {
-  const core = lynx.getCoreContext?.()
-  if (!core) {
-    throw new Error(
-      '@lynx-lab/app-lifecycle: lynx.getCoreContext() is unavailable, so this call ' +
-        'is running on the main thread. Module scope in ReactLynx runs on both ' +
-        'threads: call it from a component, from useEffect, or use the hooks from ' +
-        '"@lynx-lab/app-lifecycle/react".'
-    )
-  }
-  const onVisible = (): void => listener('visible')
-  const onHidden = (): void => listener('hidden')
+    const core = lynx.getCoreContext?.()
+    if (!core) {
+        throw new Error(
+            '@lynx-lab/app-lifecycle: lynx.getCoreContext() is unavailable, so this call ' +
+                'is running on the main thread. Module scope in ReactLynx runs on both ' +
+                'threads: call it from a component, from useEffect, or use the hooks from ' +
+                '"@lynx-lab/app-lifecycle/react".'
+        )
+    }
+    const onVisible = (): void => listener('visible')
+    const onHidden = (): void => listener('hidden')
 
-  core.addEventListener('__OnAppEnterForeground', onVisible)
-  core.addEventListener('__OnAppEnterBackground', onHidden)
+    core.addEventListener('__OnAppEnterForeground', onVisible)
+    core.addEventListener('__OnAppEnterBackground', onHidden)
 
-  return () => {
-    core.removeEventListener('__OnAppEnterForeground', onVisible)
-    core.removeEventListener('__OnAppEnterBackground', onHidden)
-  }
+    return () => {
+        core.removeEventListener('__OnAppEnterForeground', onVisible)
+        core.removeEventListener('__OnAppEnterBackground', onHidden)
+    }
 }

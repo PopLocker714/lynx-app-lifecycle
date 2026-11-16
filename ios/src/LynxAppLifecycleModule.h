@@ -22,8 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Autolink регистрирует модуль БЕЗ param, поэтому `initWithParam:` не вызовется
  * никогда, и без этого протокола контекста, а значит и sendGlobalEvent, не будет.
  */
-@LynxNativeModule("LynxAppLifecycleModule")
-@interface LynxAppLifecycleModule : NSObject <LynxContextModule>
+@LynxNativeModule("LynxAppLifecycleModule") @interface LynxAppLifecycleModule
+    : NSObject<LynxContextModule>
 @end
 
 NS_ASSUME_NONNULL_END

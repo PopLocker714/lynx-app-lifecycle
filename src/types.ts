@@ -11,13 +11,13 @@
 export type AppState = 'active' | 'background'
 
 export interface AppStateSnapshot {
-  readonly state: AppState
-  /**
-   * Монотонный счётчик. Разрыв означает пропущенное событие: перечитай
-   * `getAppState()`. Нужен потому, что глобальные события Lynx дропаются,
-   * если рантайм ещё не поднялся.
-   */
-  readonly generation: number
+    readonly state: AppState
+    /**
+     * Монотонный счётчик. Разрыв означает пропущенное событие: перечитай
+     * `getAppState()`. Нужен потому, что глобальные события Lynx дропаются,
+     * если рантайм ещё не поднялся.
+     */
+    readonly generation: number
 }
 
 /**

@@ -1,23 +1,47 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "files": {
-    "includes": ["**/*.ts", "**/*.mjs", "**/*.json", "!dist", "!android/build"]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 80
-  },
-  "javascript": {
+    "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
+    "files": {
+        "includes": [
+            "**/*.ts",
+            "**/*.tsx",
+            "**/*.js",
+            "**/*.jsx",
+            "**/*.mjs",
+            "**/*.cjs",
+            "**/*.json",
+            "**/*.jsonc",
+            "!dist",
+            "!coverage",
+            "!android/build",
+            "!android/.gradle",
+            "!android-check/build",
+            "!android-check/.gradle",
+            "!ios/build",
+            "!ios/Pods",
+            "!.tools",
+            "!artifacts"
+        ]
+    },
     "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "asNeeded",
-      "trailingCommas": "es5"
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "semicolons": "asNeeded",
+            "trailingCommas": "es5"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "recommended",
+            "suspicious": {
+                "noExplicitAny": "error"
+            }
+        }
     }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": { "recommended": true }
-  }
 }

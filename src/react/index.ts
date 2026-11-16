@@ -9,33 +9,33 @@ import type { AppState, AppStateSnapshot, PageVisibility } from '../types.js'
  * события: первое событие подпиской не приходит никогда.
  */
 export function useAppState(): AppState {
-  const [state, setState] = useState<AppState>(() => {
-    try {
-      return getAppState().state
-    } catch {
-      // Модуль не слинкован или главный поток. Не роняем рендер, но и не врём:
-      // getAppState() бросит с внятным текстом, если позвать его напрямую.
-      return 'active'
-    }
-  })
+    const [state, setState] = useState<AppState>(() => {
+        try {
+            return getAppState().state
+        } catch {
+            // Модуль не слинкован или главный поток. Не роняем рендер, но и не врём:
+            // getAppState() бросит с внятным текстом, если позвать его напрямую.
+            return 'active'
+        }
+    })
 
-  useEffect(() => {
-    let alive = true
-    let unsubscribe: (() => void) | undefined
-    try {
-      unsubscribe = subscribe((snapshot) => {
-        if (alive) setState(snapshot.state)
-      })
-    } catch {
-      /* см. выше */
-    }
-    return () => {
-      alive = false
-      unsubscribe?.()
-    }
-  }, [])
+    useEffect(() => {
+        let alive = true
+        let unsubscribe: (() => void) | undefined
+        try {
+            unsubscribe = subscribe((snapshot) => {
+                if (alive) setState(snapshot.state)
+            })
+        } catch {
+            /* см. выше */
+        }
+        return () => {
+            alive = false
+            unsubscribe?.()
+        }
+    }, [])
 
-  return state
+    return state
 }
 
 /**
@@ -45,17 +45,17 @@ export function useAppState(): AppState {
  * обновить токен, ресинкнуть корзину.
  */
 export function useAppStateChange(
-  onChange: (snapshot: AppStateSnapshot, missedEvents: boolean) => void
+    onChange: (snapshot: AppStateSnapshot, missedEvents: boolean) => void
 ): void {
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined
-    try {
-      unsubscribe = subscribe(onChange)
-    } catch {
-      /* модуль не слинкован */
-    }
-    return () => unsubscribe?.()
-  }, [onChange])
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined
+        try {
+            unsubscribe = subscribe(onChange)
+        } catch {
+            /* модуль не слинкован */
+        }
+        return () => unsubscribe?.()
+    }, [onChange])
 }
 
 /**
@@ -63,17 +63,17 @@ export function useAppStateChange(
  * Нативного кода не требует.
  */
 export function usePageVisibility(): PageVisibility {
-  const [visibility, setVisibility] = useState<PageVisibility>('visible')
+    const [visibility, setVisibility] = useState<PageVisibility>('visible')
 
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined
-    try {
-      unsubscribe = subscribePageVisibility(setVisibility)
-    } catch {
-      /* главный поток */
-    }
-    return () => unsubscribe?.()
-  }, [])
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined
+        try {
+            unsubscribe = subscribePageVisibility(setVisibility)
+        } catch {
+            /* главный поток */
+        }
+        return () => unsubscribe?.()
+    }, [])
 
-  return visibility
+    return visibility
 }
