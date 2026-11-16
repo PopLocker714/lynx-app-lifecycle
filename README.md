@@ -21,7 +21,8 @@ means that a Lynx container was shown or hidden; it is not interchangeable with 
 | Native minimum | Declared API 23; minimum not device-verified | Declared iOS 12; minimum not device-verified |
 
 This working revision is a **candidate**, not a completed stable verification profile.
-Historical smoke and current checks are distinguished in [compatibility](docs/compatibility.md).
+Physical Android/iOS Debug/Release passed for the recorded ReactLynx 0.125 / Rsbuild 2
+consumer. Exact artifacts, scenarios and remaining gaps are in [compatibility](docs/compatibility.md).
 Lynx is the platform; Sparkling is the first consumer host. Other hosts require their own checks.
 
 ## Requirements and installation
