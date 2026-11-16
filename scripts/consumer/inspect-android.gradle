@@ -1,0 +1,35 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+
+gradle.projectsEvaluated {
+    gradle.rootProject.tasks.register('lynxConsumerBindings') {
+        doLast {
+            def app = gradle.rootProject.project(':app')
+            def projects = gradle.rootProject.allprojects
+                .findAll { it.name.startsWith('lynx_library') }.collect { project ->
+                    def variants = [:]
+                    ['Debug', 'Release'].each { variant ->
+                        def compiler = project.tasks.getByName("compile${variant}Kotlin")
+                        variants[variant] = compiler.sources.files
+                            .collect { it.canonicalPath }.sort()
+                    }
+                    [path: project.path, directory: project.projectDir.canonicalPath,
+                     sources: variants]
+                }
+            def variants = [:]
+            ['Debug', 'Release'].each { variant ->
+                def configuration = app.configurations
+                    .getByName("${variant.toLowerCase()}RuntimeClasspath")
+                def linked = configuration.incoming.resolutionResult.allComponents
+                    .collect { it.id }.findAll { it instanceof ProjectComponentIdentifier }
+                    .collect { it.projectPath }
+                def registry = app.tasks.getByName("compile${variant}JavaWithJavac").source.files
+                    .findAll { it.name == 'LynxAutolinkGenerated.java' }
+                    .collect { it.canonicalPath }
+                variants[variant] = [projects: linked, registry: registry]
+            }
+            new File(System.getenv('LYNX_BINDING_OUTPUT')).text =
+                JsonOutput.toJson([projects: projects, variants: variants])
+        }
+    }
+}

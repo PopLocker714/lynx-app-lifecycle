@@ -8,3 +8,13 @@ android-check/build/
 android-check/.gradle/
 android-check/local.properties
 !android-check/gradle/wrapper/gradle-wrapper.jar
+
+artifacts/
+.tools/
+android-check/.kotlin/
+ios/build/
+ios-check/Pods/
+ios-check/build/
+ios-check/*.xcodeproj/
+ios-check/*.xcworkspace/
+ios-check/.bundle/

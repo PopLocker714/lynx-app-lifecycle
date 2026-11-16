@@ -1,0 +1,8 @@
+source "https://cdn.cocoapods.org/"
+platform :ios, "12.0"
+use_frameworks! :linkage => :static
+project "LifecycleCheck.xcodeproj"
+target "LifecycleCheck" do
+    pod "Lynx", "3.9.0"
+    pod "LynxAppLifecycle", :path => "../ios"
+end

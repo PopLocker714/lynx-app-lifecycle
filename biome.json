@@ -19,7 +19,10 @@
             "!ios/build",
             "!ios/Pods",
             "!.tools",
-            "!artifacts"
+            "!artifacts",
+            "!ios-check/Pods",
+            "!ios-check/build",
+            "!ios-check/.bundle"
         ]
     },
     "formatter": {

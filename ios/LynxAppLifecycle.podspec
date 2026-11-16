@@ -15,8 +15,6 @@ Pod::Spec.new do |s|
 
   s.source_files = "src/**/*.{h,m}"
 
-  # Без ограничения версии: Lynx поставляет хост, а любой пин ломает резолв.
-  # Шаблон Sparkling пинит 3.6.0 (latest) или 3.9.0 (rc), а поды Lynx 4.x
-  # на CocoaPods не резолвятся вовсе из-за конфликта LynxServiceAPI.
+  # Lynx is supplied by the consumer. Exact verified profiles belong in docs/compatibility.md.
   s.dependency "Lynx"
 end

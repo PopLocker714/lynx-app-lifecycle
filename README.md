@@ -1,152 +1,119 @@
-# @lynx-lab/app-lifecycle
-
 > **English** · [Русский](./README.ru.md)
+
+# @lynx-lab/app-lifecycle
 
 [![npm](https://img.shields.io/npm/v/@lynx-lab/app-lifecycle?color=cb3837&logo=npm)](https://www.npmjs.com/package/@lynx-lab/app-lifecycle)
 [![CI](https://github.com/PopLocker714/lynx-app-lifecycle/actions/workflows/ci.yml/badge.svg)](https://github.com/PopLocker714/lynx-app-lifecycle/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@lynx-lab/app-lifecycle?color=blue)](./LICENSE)
 
-Foreground/background state for [Lynx](https://lynxjs.org) apps, plus page-visibility
-events that cost no native code at all.
+App foreground/background state for Lynx, with a separate API for host page visibility.
+Use app state to detect returning from a payment or authentication app. Page visibility
+means that a Lynx container was shown or hidden; it is not interchangeable with app state.
 
-## Why this exists
+## Platform support
 
-Lynx has exactly four global events — `keyboardstatuschanged`, `onWindowResize`,
-`exposure`, `disexposure` — and none of them is app lifecycle.
-
-It *looks* like the signal is already there. `lynx-core` subscribes to
-`MessageEventType.ON_APP_ENTER_FOREGROUND` on the core context and calls
-`onAppEnterForeground()`, which is an empty "override by subclass" stub. Subscribing to
-that event from JS works — I verified it on a device.
-
-But it does not mean what the name says. Sparkling calls `onEnterForeground()` from
-`onshow(params:)`, the **container visibility** callback, not from `UIApplication`
-notifications ([`SPKWrapperLynxView.swift:383`](https://github.com/tiktok/sparkling)).
-Backgrounding the whole app fires nothing. Verified: zero `__OnAppEnterBackground`
-events across a real background transition.
-
-So this package ships both:
-
-| API | Means | Native code |
+| Capability | Android | iOS |
 |---|---|---|
-| `getAppState`, `subscribe`, `useAppState` | the **app** went to background or came back | yes |
-| `subscribePageVisibility`, `usePageVisibility` | this **Lynx page** was shown or hidden | none |
+| App snapshot and transition subscriptions | Implemented | Implemented |
+| Multiple Lynx contexts | Shared process state, per-context delivery | Shared process state, per-context delivery |
+| `inactive` state | Not exposed | Not exposed; inactive maps to foreground |
+| Page visibility | Host CoreContext events | Host CoreContext events |
+| Native minimum | Declared API 23; minimum not device-verified | Declared iOS 12; minimum not device-verified |
 
-If you are detecting "the user came back from their bank app to finish a payment",
-you want the first one.
+This working revision is a **candidate**, not a completed stable verification profile.
+Historical smoke and current checks are distinguished in [compatibility](docs/compatibility.md).
+Lynx is the platform; Sparkling is the first consumer host. Other hosts require their own checks.
 
-## Install
+## Requirements and installation
+
+React hooks declare `@lynx-js/react >=0.124.0`; the optional type peer is
+`@lynx-js/types ^4.0.0`. Development uses ReactLynx 0.125.0. These are JS package
+versions, separate from the host's native Lynx runtime. An older ReactLynx consumer
+must not be marked verified merely because a native build succeeds.
 
 ```sh
 bun add @lynx-lab/app-lifecycle
 ```
 
-**Android** — nothing else. No permissions, nothing merged into your manifest.
+To evaluate this unpublished candidate, run `bun run check:package` in its checkout,
+then install the exact `artifacts/app-lifecycle-<sha256>.tgz` in the consumer with `bun add`.
+The npm badge describes the published version, not this branch.
 
-**iOS** — `pod install`.
+**Android:** autolink registers the module; the merged manifest now includes a
+non-exported initialization provider. No runtime permissions are requested. The
+provider observes Activity startup before the first Activity. This replaces the old
+lazy assumption that exactly one Activity was already active.
+
+If your host removes the provider, initialize on the main thread before any Activity starts:
+
+```kotlin
+LynxAppLifecycleModule.initialize(application)
+```
+
+Late initialization cannot reconstruct Activities whose callbacks were missed.
+Without initialization, `getAppState()` fails instead of reporting a guessed state.
+Manual module registration is separate from process initialization.
+
+**iOS:** install Pods using the host's normal CocoaPods command. The process observer
+starts on the main queue. A read before bootstrap fails; no synchronous bridge call
+waits on the main queue. App extensions and independent scene state are not supported.
 
 ## Usage
 
-```tsx
-import { useAppState, useAppStateChange } from '@lynx-lab/app-lifecycle/react'
-
-function Checkout() {
-  // re-renders on change
-  const state = useAppState()
-
-  // or react to the transition without re-rendering
-  useAppStateChange((snapshot) => {
-    if (snapshot.state === 'active') refetchPaymentStatus()
-  })
-}
-```
-
-Without React:
+Call the core API from the Lynx background thread. Module scope also executes on the
+main thread; an unguarded top-level native call is unsafe. Hooks preserve their
+fallbacks when native state is unavailable and resynchronize after subscribing.
 
 ```ts
 import { getAppState, subscribe } from '@lynx-lab/app-lifecycle'
+import type { AppState } from '@lynx-lab/app-lifecycle'
 
-const { state } = getAppState()
-const off = subscribe(({ state }) => console.log(state))
+export function observeApp(onState: (state: AppState) => void) {
+    'background only'
+    const initial = getAppState()
+    const unsubscribe = subscribe(({ state }) => onState(state))
+    return { initial, unsubscribe }
+}
 ```
 
-### Thread requirement
-
-`NativeModules` exists **only on the background (BTS) thread** and is `undefined` on the
-main thread. Everything here must be called from the background thread.
-
-**The trap:** in ReactLynx, code at **module scope runs on BOTH threads**. So this fails
-every time, on the main thread half:
+React hooks:
 
 ```ts
-// ❌ top level of a file — also runs on the main thread
-const { state } = getAppState()
-```
+import { useAppState, useAppStateChange } from '@lynx-lab/app-lifecycle/react'
 
-Call it from inside a component, from an effect, or from anything that is background-thread
-by construction. The hooks in `@lynx-lab/app-lifecycle/react` already handle this.
+export function useCheckoutLifecycle(onActive: () => void) {
+    const state = useAppState()
+    useAppStateChange((snapshot) => {
+        if (snapshot.state === 'active') onActive()
+    })
+    return state
+}
+```
 
 ## API
 
-| Function | What it does |
+| API | Contract |
 |---|---|
-| `getAppState(): AppStateSnapshot` | Synchronous and authoritative. **This is how you get the initial value** |
-| `subscribe(cb): Unsubscribe` | Transitions only. The callback's second argument is `true` when a generation gap says an event was lost |
-| `subscribePageVisibility(cb): Unsubscribe` | Page shown/hidden. No native module needed |
-| `useAppState(): AppState` | React hook, re-renders on change |
-| `useAppStateChange(cb)` | React hook, callback only |
-| `usePageVisibility(): PageVisibility` | React hook for page visibility |
-| `setNativeModule(m)` | Test seam. `null` restores real lookup |
+| `getAppState()` | Synchronous `{ state, generation }` from initialized native observation; throws on unavailable/malformed snapshot |
+| `subscribe(listener)` | Transitions only; second argument reports a generation gap independently for each subscriber |
+| `subscribePageVisibility(listener)` | `visible` / `hidden` from the host's CoreContext; no native module required |
+| `useAppState()` | Reactive app state; initial fallback is `active` when native access fails |
+| `useAppStateChange(listener)` | Transition callback; subscription errors retain the existing silent fallback |
+| `usePageVisibility()` | Page visibility; initial fallback is `visible` |
+| `setNativeModule(module)` | Test seam; `null` restores real lookup |
 
-There is no `inactive` state. Android has no such thing, and promising identical
-behaviour while not delivering it is worse than not promising it.
+Subscriptions return an unsubscribe function. Read the initial snapshot explicitly;
+Lynx can drop events before its JS emitter exists. Valid states are `active` and
+`background`. Malformed events are ignored. Legacy events without generation deliver
+`generation: -1` with `missedEvents: false`; the next known generation starts a new cursor.
+A gap is measured from the subscriber's last event or the most recently known snapshot
+when it subscribed. Calling the getter or another listener does not consume its gap.
 
-### Why the initial value comes from a getter, not a subscription
+Android keeps foreground state for up to **700 ms** after the last Activity stops for
+configuration recreation. A new start cancels that grace; failed/slow recreation
+settles to background. Ordinary last-Activity stops report background immediately.
+This is a bounded policy, not a guarantee for arbitrarily slow recreation.
 
-Lynx drops a global event when the runtime is not up yet, so the **first** state never
-arrives by subscription. `getAppState()` reads native state directly and always works.
-Every snapshot carries a monotonic `generation`; a gap means an event was lost.
-
-## When the module is not found
-
-The Lynx pipeline fails silently, so the error names both causes.
-
-**Android** — `adb logcat | grep "Skip unavailable Lynx library provider"`. That means the
-annotation processor did not run: the library declares
-`kapt("org.lynxsdk.lynx:lynx-processor")` itself, because the Gradle plugin passes the
-processor argument but never adds the processor.
-
-**iOS** — check that `Pods/` has a generated autolink registry naming
-`LynxAppLifecycleModule`. If not, the `@LynxNativeModule("...")` marker was not matched.
-
-Manual fallback:
-
-```kotlin
-LynxEnv.inst().registerModule("LynxAppLifecycleModule", LynxAppLifecycleModule::class.java)
-```
-
-```objc
-[config registerModule:LynxAppLifecycleModule.class];
-```
-
-## Implementation notes
-
-**Android uses `ActivityLifecycleCallbacks`, not `ProcessLifecycleOwner`.** The latter
-would pull `androidx.lifecycle:lifecycle-process` into someone else's build for thirty
-lines of logic, and the Sparkling template is AGP 7.4.2 with Kotlin 1.8.10, where an extra
-resolve is a real risk. Counting started activities gives the same answer with zero
-dependencies. Rotation does not produce a false background because the new activity's
-`onStart` runs before the old one's `onStop`, so the counter never reaches zero.
-
-**iOS conforms to `LynxContextModule`.** That is not cosmetic: `CommonModuleCreator`
-checks for exactly that protocol and then calls `initWithLynxContext:` itself, handing
-over the `LynxContext`. Autolink registers modules **without** a param, so
-`initWithParam:` is never called — without this protocol there is no context, and
-therefore no `sendGlobalEvent`.
-
-**The `LynxNativeModule` macro is defined under `#ifndef`.** It only exists from Lynx
-3.9.0, and the `latest` Sparkling template still pins 3.6.0.
-
-## License
-
-MIT
+For installation diagnostics, native ownership, exact checks and contributions see:
+[implementation](docs/implementation.md), [compatibility](docs/compatibility.md),
+[contributing](CONTRIBUTING.md). License: [MIT](LICENSE).

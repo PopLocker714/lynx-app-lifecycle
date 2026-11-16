@@ -1,7 +1,7 @@
 {
     "name": "@lynx-lab/app-lifecycle",
     "version": "1.0.0",
-    "description": "App foreground/background lifecycle for Lynx — the signal Lynx dispatches but never wires to the app, plus free page-visibility events.",
+    "description": "App foreground/background lifecycle for Lynx \u2014 the signal Lynx dispatches but never wires to the app, plus free page-visibility events.",
     "license": "MIT",
     "author": "PopLocker714",
     "type": "module",
@@ -44,7 +44,7 @@
     "files": [
         "dist",
         "src/**/*.ts",
-        "!src/__tests__",
+        "!src/__tests__/**",
         "android",
         "!android/build",
         "!android/.gradle",
@@ -52,17 +52,33 @@
         "lynx.lib.json",
         "LICENSE",
         "README.md",
-        "README.ru.md"
+        "README.ru.md",
+        "!android/src/test",
+        "CONTRIBUTING.md",
+        "CONTRIBUTING.ru.md",
+        "docs"
     ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "typecheck": "tsc -p tsconfig.json --noEmit",
-        "lint": "biome check .",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+        "lint": "biome check --error-on-warnings .",
         "format": "biome format --write .",
         "test": "vitest run",
         "prepack": "bun run build",
-        "prepublishOnly": "node scripts/check-publishable.mjs",
-        "release": "semantic-release"
+        "prepublishOnly": "bun scripts/release-preflight.mjs",
+        "release": "bun scripts/release-preflight.mjs && semantic-release",
+        "check:package": "bun scripts/check-publishable.mjs",
+        "check": "bun run lint && bun run typecheck && bun run check:types-compat && bun run test && bun run test:tooling && bun run build && bun run check:package",
+        "format:native": "bun scripts/native-tools.mjs format",
+        "check:android": "bun scripts/check-android.mjs",
+        "check:ios": "bun scripts/check-ios.mjs",
+        "check:ios:store": "bun scripts/check-ios-store.mjs",
+        "check:audit": "bun scripts/check-audit.mjs",
+        "release:dry-run": "semantic-release --dry-run",
+        "check:types-compat": "bun scripts/check-types-compat.mjs",
+        "test:tooling": "bun test scripts/consumer/*.test.mjs",
+        "check:consumer": "bun scripts/check-consumer.mjs",
+        "check:consumer:bindings": "bun scripts/check-consumer-bindings.mjs"
     },
     "peerDependencies": {
         "@lynx-js/react": ">=0.124.0",
@@ -77,15 +93,18 @@
         }
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.0.0",
-        "@lynx-js/react": "^0.125.0",
-        "@lynx-js/types": "^4.1.0",
+        "@biomejs/biome": "2.5.9",
+        "@lynx-js/react": "0.125.0",
+        "@lynx-js/types": "4.2.1",
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/git": "^10.0.1",
-        "conventional-changelog-conventionalcommits": "^9.0.0",
+        "@types/node": "26.6.6",
+        "@types/react": "18.3.28",
+        "conventional-changelog-conventionalcommits": "^9.3.1",
+        "preact": "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c",
         "semantic-release": "^25.0.9",
-        "typescript": "^5.9.0",
-        "vitest": "^4.1.11"
+        "typescript": "5.9.3",
+        "vitest": "4.1.12"
     },
     "publishConfig": {
         "access": "public",

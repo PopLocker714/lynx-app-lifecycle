@@ -16,15 +16,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
   release:
     name: Release
+    needs: checks
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
-      # Нужен для npm Trusted Publishing (OIDC). Уже стоит, чтобы после
-      # публикации 1.0.0 можно было выключить NPM_TOKEN одним вычитанием.
+      # Trusted Publishing must be configured before the release gate is enabled.
       id-token: write
     steps:
       - name: Checkout
@@ -35,7 +38,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # 22.14.0 это пол npm для trusted publishing, не опускать
           node-version: 22.14.0
       - name: Setup Bun.js
         uses: oven-sh/setup-bun@v2
@@ -49,25 +51,22 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install npm dependencies (bun)
-        run: bun install
+        run: bun install --frozen-lockfile
 
-      - name: Build lib
-        run: bun run build
+      - name: Verify release artifact policy
+        if: ${{ !inputs.dry_run }}
+        run: bun scripts/release-preflight.mjs
+
+      - name: Check package
+        run: bun run check
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # NPM_TOKEN здесь больше нет: публикация идёт через npm Trusted
-          # Publishing (OIDC), права даёт id-token: write выше. Проверено на
-          # релизе 1.0.1: "OIDC token exchange with the npm registry succeeded".
-          #
-          # NPM_CONFIG_PROVENANCE оставлен намеренно. Документация npm обещает,
-          # что под trusted publishing provenance генерируется сама, но есть
-          # публичный отчёт, где флаг всё равно требовался. Строка ничего не
-          # стоит и страхует цепочку provenance.
+          # Explicit provenance for the eventual immutable-artifact OIDC release.
           NPM_CONFIG_PROVENANCE: true
           GIT_AUTHOR_NAME: ${{ github.actor }}
           GIT_AUTHOR_EMAIL: '${{ github.actor }}@users.noreply.github.com'
           GIT_COMMITTER_NAME: ${{ github.actor }}
           GIT_COMMITTER_EMAIL: '${{ github.actor }}@users.noreply.github.com'
-        run: bun run release ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: ${{ inputs.dry_run && 'bun run release:dry-run' || 'bun run release' }}
