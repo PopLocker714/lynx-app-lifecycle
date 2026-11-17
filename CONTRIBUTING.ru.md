@@ -88,12 +88,11 @@ minimatch 11.0.1 выходят за upstream major ranges; принудител
 2026-12-17T00:00:00Z. Изменение графа/истечение срока дают failure до пересмотра.
 Это не нулевой raw audit.
 
-`release` и `prepublishOnly` намеренно завершаются ошибкой; `release:dry-run` только
-анализирует возможный выпуск. Перед разблокировкой нужна цепочка final version/changelog
-→ immutable tarball → consumer QA этого tarball → publish того же tarball. Обычный repack
-semantic-release не доказывает идентичность. Публикация, изменение support ranges и повышение
-минимальных платформ требуют отдельного разрешения. Во время миграции сохраняйте локальные
-commits/evidence без push и публикации.
+Прямые `release` и `prepublishOnly` остаются заблокированы. Ручной workflow
+prepare → QA → publish сохраняет один неизменяемый архив; см. [порядок выпуска](./docs/releasing.ru.md).
+Выберите SemVer и закоммитьте финальные version/changelog до подготовки.
+`release:dry-run` — только рекомендательный анализ. Нужны полный source-bound QA и явный
+manual publish; успешные локальные checks сами по себе не разрешают публикацию.
 
 ## Привязка исходников consumer
 

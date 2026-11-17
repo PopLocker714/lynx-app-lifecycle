@@ -1,7 +1,7 @@
 {
     "name": "@lynx-lab/app-lifecycle",
     "version": "1.0.0",
-    "description": "App foreground/background lifecycle for Lynx \u2014 the signal Lynx dispatches but never wires to the app, plus free page-visibility events.",
+    "description": "App foreground/background lifecycle for Lynx — the signal Lynx dispatches but never wires to the app, plus free page-visibility events.",
     "license": "MIT",
     "author": "PopLocker714",
     "type": "module",
@@ -66,9 +66,9 @@
         "test": "vitest run",
         "prepack": "bun run build",
         "prepublishOnly": "bun scripts/release-preflight.mjs",
-        "release": "bun scripts/release-preflight.mjs && semantic-release",
+        "release": "bun scripts/release-preflight.mjs",
         "check:package": "bun scripts/check-publishable.mjs",
-        "check": "bun run lint && bun run typecheck && bun run check:types-compat && bun run test && bun run test:tooling && bun run build && bun run check:package",
+        "check": "bun run lint && bun run typecheck && bun run check:types-compat && bun run test && bun run test:release && bun run test:tooling && bun run build && bun run check:package",
         "format:native": "bun scripts/native-tools.mjs format",
         "check:android": "bun scripts/check-android.mjs",
         "check:ios": "bun scripts/check-ios.mjs",
@@ -78,7 +78,10 @@
         "check:types-compat": "bun scripts/check-types-compat.mjs",
         "test:tooling": "bun test scripts/consumer/*.test.mjs",
         "check:consumer": "bun scripts/check-consumer.mjs",
-        "check:consumer:bindings": "bun scripts/check-consumer-bindings.mjs"
+        "check:consumer:bindings": "bun scripts/check-consumer-bindings.mjs",
+        "test:release": "bun test scripts/release/*.test.mjs",
+        "release:prepare": "bun scripts/release/prepare.mjs",
+        "release:verify": "bun scripts/release/verify.mjs"
     },
     "peerDependencies": {
         "@lynx-js/react": ">=0.124.0",

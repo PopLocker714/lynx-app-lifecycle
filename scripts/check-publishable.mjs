@@ -17,8 +17,10 @@ mkdirSync('artifacts', { recursive: true })
 const examples = mkdtempSync(resolve('artifacts', 'examples-'))
 const temporary = mkdtempSync(join(tmpdir(), 'lynx-app-lifecycle-pack-'))
 try {
-    const archive = join(temporary, 'package.tgz')
-    execFileSync('bun', ['pm', 'pack', '--filename', archive], { stdio: 'inherit' })
+    const suppliedArchive = process.env.RELEASE_TARBALL
+    const archive = suppliedArchive ? resolve(suppliedArchive) : join(temporary, 'package.tgz')
+    if (!suppliedArchive)
+        execFileSync('bun', ['pm', 'pack', '--filename', archive], { stdio: 'inherit' })
     execFileSync('tar', ['-xzf', archive, '-C', temporary])
     const root = join(temporary, 'package')
     const metadata = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
@@ -151,14 +153,14 @@ try {
     })
     const hash = createHash('sha256').update(readFileSync(archive)).digest('hex')
     mkdirSync('artifacts', { recursive: true })
-    const output = resolve('artifacts', `app-lifecycle-${hash}.tgz`)
-    renameSync(archive, output)
+    const output = suppliedArchive ? archive : resolve('artifacts', `app-lifecycle-${hash}.tgz`)
+    if (!suppliedArchive) renameSync(archive, output)
     const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
     const dirty =
         execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0
     writeFileSync(
         'artifacts/package-evidence.json',
-        `${JSON.stringify({ sourceCommit, dirty, sha256: hash, tarball: output }, null, 4)}\n`
+        `${JSON.stringify({ sourceCommit: suppliedArchive ? null : sourceCommit, inspectorCommit: sourceCommit, mode: suppliedArchive ? 'inspect' : 'pack', dirty, sha256: hash, tarball: output }, null, 4)}\n`
     )
     console.log(`Source: ${sourceCommit}${dirty ? ' (dirty)' : ''}`)
     console.log(`check-publishable: ${files.length} files; SHA256 ${hash}\n${output}`)

@@ -87,11 +87,11 @@ no forced major override is applied. The two exceptions are bound to this packag
 physical bundle versions and expiry 2026-12-17T00:00:00Z. Changed graph/expiry must fail until
 reassessed; this is not a zero-findings raw audit.
 
-`release` and `prepublishOnly` intentionally fail. `release:dry-run` only analyzes a possible
-release. Before unblocking, implement final version/changelog → immutable tarball → consumer
-QA of that tarball → publish the same tarball. Semantic-release's ordinary repack does not
-prove identity. Publishing, changing support ranges and raising platform minima require separate
-approval. Store local commits and evidence without pushing or publishing during migration.
+Direct `release` and `prepublishOnly` remain blocked. The manual prepare → QA → publish
+workflow now preserves one immutable archive; see [Releasing](./docs/releasing.md).
+Choose SemVer explicitly and commit the final version/changelog before preparation.
+`release:dry-run` provides advisory analysis only. Complete source-bound QA and explicit
+manual publish approval are required; passing local checks does not authorize publication.
 
 ## Consumer source binding
 

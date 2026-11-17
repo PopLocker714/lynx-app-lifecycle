@@ -1,0 +1,18 @@
+{
+    "schemaVersion": 1,
+    "repository": "PopLocker714/lynx-app-lifecycle",
+    "requiredChecks": [
+        "android-debug",
+        "android-release-r8",
+        "ios-debug",
+        "ios-release",
+        "native-source-bindings",
+        "minimum-android",
+        "minimum-ios",
+        "independent-review",
+        "lifecycle-initial-background",
+        "lifecycle-two-subscribers-cleanup",
+        "lifecycle-activity-recreation",
+        "lifecycle-multiview"
+    ]
+}
