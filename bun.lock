@@ -28,6 +28,9 @@
       ],
     },
   },
+  "patchedDependencies": {
+    "@lynx-js/types@4.2.1": "patches/@lynx-js%2Ftypes@4.2.1.patch",
+  },
   "packages": {
     "@actions/core": ["@actions/core@3.0.1", "", { "dependencies": { "@actions/exec": "^3.0.0", "@actions/http-client": "^4.0.0" } }, "sha512-a6d/Nwahm9fliVGRhdhofo40HjHQasUPusmc7vBfyky+7Z+P2A1J68zyFVaNcEclc/Se+eO595oAr5nwEIoIUA=="],
 

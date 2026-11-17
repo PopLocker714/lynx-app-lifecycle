@@ -113,5 +113,8 @@
         "access": "public",
         "registry": "https://registry.npmjs.org/"
     },
-    "packageManager": "bun@1.4.0"
+    "packageManager": "bun@1.4.0",
+    "patchedDependencies": {
+        "@lynx-js/types@4.2.1": "patches/@lynx-js%2Ftypes@4.2.1.patch"
+    }
 }

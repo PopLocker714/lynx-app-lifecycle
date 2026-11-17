@@ -64,6 +64,16 @@ updating the relevant dependencies or enabling a release. `skipLibCheck` stays f
   does not prove every React/host combination. Its aliased internal-preact imports itself as
   `preact`; a dev alias to the exact upstream version and TS `paths` resolves that self-import
   under isolated storage. No application runtime dependency or handwritten substitute API is added.
+- `@lynx-js/types` 4.2.1 includes a legacy `react.JSX` augmentation that conflicts with
+  React 18 DOM input refs and shadows Lynx `SVGProps` during hoisted installs. The dev-only
+  Apache-2.0 patch removes that augmentation; all exported Lynx element types remain intact.
+  ReactLynx 0.125 uses its own `@lynx-js/react/jsx-runtime` JSX namespace. A strict fixture
+  verifies native input/SVG types and keeps DOM and native refs distinct. The compatibility
+  check binds the patch to the exact version and declaration SHA256. Reassess on either Lynx
+  types or ReactLynx upgrade; remove when upstream separates these JSX namespaces correctly.
+  This root development patch is not shipped to or applied in consumer installations; those
+  must verify their own renderer/type profile. Both hoisted and isolated development layouts
+  are checked with `skipLibCheck: false`. No dependency resolution or runtime byte changes.
 - Standalone KGP 2.0.21 kapt falls back to language 1.9. The opt-in strict check sets 1.9 only
   for that check; host defaults stay unchanged. Third-party annotation processor RELEASE_8/source11
   and installed SDK XML tool-version diagnostics are recorded in native logs; own Kotlin/Clang/Lint

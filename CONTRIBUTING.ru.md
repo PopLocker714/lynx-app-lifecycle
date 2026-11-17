@@ -64,6 +64,16 @@ Pods и builds — воспроизводимые локальные резул�
   подтверждает все сочетания React/host. Aliased internal-preact импортирует себя как
   `preact`; dev alias точно той же версии upstream и TS paths разрешают self-import при
   isolated storage. Runtime dependency приложения и выдуманный API не добавляются.
+- `@lynx-js/types` 4.2.1 содержит устаревшее расширение `react.JSX`: при hoisted install
+  оно смешивает refs React DOM input с Lynx и затеняет Lynx `SVGProps`. Dev-only patch под
+  Apache-2.0 удаляет только это расширение, сохраняя все экспортируемые типы элементов Lynx.
+  ReactLynx 0.125 использует собственный JSX namespace `@lynx-js/react/jsx-runtime`.
+  Strict fixture проверяет native input/SVG и несовместимость DOM/native refs. Compatibility
+  check привязан к точной версии и SHA256 declaration. Пересмотреть при обновлении Lynx types
+  или ReactLynx; удалить, когда upstream корректно разделит JSX namespaces. Корневой dev patch
+  не поставляется и не применяется в consumer: его renderer/type profile проверяется отдельно.
+  Hoisted и isolated development layouts проверены с `skipLibCheck: false`; разрешённые
+  версии зависимостей и runtime bytes не меняются.
 - Standalone KGP 2.0.21 kapt переключается на language 1.9. Opt-in strict check явно задаёт
   1.9 только этой проверке; defaults host не меняются. Диагностики стороннего annotation
   processor RELEASE_8/source11 и установленного SDK XML tool-version записаны в native logs;

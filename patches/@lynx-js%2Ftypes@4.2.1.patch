@@ -1,0 +1,46 @@
+--- a/types/common/element/element.d.ts
++++ b/types/common/element/element.d.ts
+@@ -89,43 +89,3 @@
+   'video': VideoProps;
+ }
+ 
+-declare module 'react' {
+-  namespace JSX {
+-    // Should copy from above IntrinsicElements
+-    interface IntrinsicElements {
+-      'component': LynxComponentProps;
+-      'filter-image': FilterImageProps;
+-      'image': ImageProps;
+-      'inline-image': ImageProps;
+-      'inline-text': TextProps;
+-      'inline-truncation': NoProps;
+-      'list': ListProps;
+-      'list-item': ListItemProps;
+-      'list-row': StandardProps;
+-      'page': PageProps;
+-      'scroll-view': ScrollViewProps;
+-      'text': TextProps;
+-      'view': ViewProps;
+-      'raw-text': StandardProps & { text: number | string };
+-      'input': InputProps;
+-      'textarea': TextAreaProps;
+-      'frame': FrameProps;
+-      'overlay': OverlayProps;
+-      'svg': SVGProps;
+-      'title-bar-view': TitleBarViewProps;
+-      'refresh': RefreshProps;
+-      'refresh-header': StandardProps;
+-      'scroll-coordinator': ScrollCoordinatorProps;
+-      'scroll-coordinator-header': ScrollCoordinatorHeaderProps;
+-      'scroll-coordinator-slot': ScrollCoordinatorSlotProps;
+-      'scroll-coordinator-slot-drag': ScrollCoordinatorSlotDragProps;
+-      'scroll-coordinator-toolbar': ScrollCoordinatorToolbarProps;
+-      'viewpager': ViewPagerProps;
+-      'viewpager-item': ViewPagerItemProps;
+-      'blur-view': BlurViewProps;
+-      'webview': WebviewProps;
+-      'markdown': MarkdownProps;
+-      'video': VideoProps;
+-    }
+-  }
+-}
