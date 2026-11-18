@@ -127,3 +127,17 @@ fixtures run via `bun run test:tooling`, and Ruby source-filter checks run befor
 
 The CI-only iOS lock currently resolves Lynx 3.9.0, LynxBase/LynxServiceAPI 4.0.3,
 and PrimJS 3.8.0-alpha.6. This fixture is separate from the consumer's exact lock/profile.
+
+The primary compiler is Xcode 27.2 locally and on the `xcode-27` GitHub image.
+The locked `ios-check` fixture uses
+`IPHONEOS_DEPLOYMENT_TARGET=15.0` for its build because this Xcode rejects older
+transitive Pod targets. This fixture override does not change the library podspec
+or verify the declared iOS 12 minimum. Record macOS/SDK versions with each run.
+The pinned Lynx 3.9 fixture retains `c99-designator` and `deprecated-declarations`
+diagnostics as warnings only in target Lynx. `unused-result` is downgraded only in
+`parallel_parse_task_scheduler.cc` and `LynxTemplateRender.mm`, and
+`deprecated-implementations` only in `LynxTextLayoutManager.m`. These exceptions
+come from compiling the locked SDK with Xcode 27.2; see `ios-check/Podfile`.
+Our module checks retain `-Werror`; no warning is suppressed and no runtime source
+is changed. Owner: Lynx Lab; observed 2026-11-18; reassess by 2026-12-18 or when
+changing Lynx/Xcode, before merge if the exception has expired.

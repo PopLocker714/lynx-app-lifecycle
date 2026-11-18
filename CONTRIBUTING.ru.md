@@ -128,3 +128,17 @@ Gradle/Pods configuration. Задайте абсолютные `CONSUMER_ROOT` �
 
 CI-only iOS lock разрешает Lynx 3.9.0, LynxBase/LynxServiceAPI 4.0.3 и PrimJS
 3.8.0-alpha.6. Этот fixture отделён от точного lock/profile consumer.
+
+Основной компилятор — Xcode 27.2 локально и в образе GitHub `xcode-27`.
+При сборке закреплённого `ios-check` fixture используется
+`IPHONEOS_DEPLOYMENT_TARGET=15.0`: этот Xcode отклоняет старые targets транзитивных
+Pods. Override тестовой сборки не меняет podspec библиотеки и не подтверждает
+заявленный минимум iOS 12. Версии macOS/SDK записываются для каждого прогона.
+В fixture Lynx 3.9 диагностики `c99-designator` и `deprecated-declarations`
+остаются предупреждениями только в target Lynx. `unused-result` понижен только
+в `parallel_parse_task_scheduler.cc` и `LynxTemplateRender.mm`, а
+`deprecated-implementations` — только в `LynxTextLayoutManager.m`. Источник —
+компиляция закреплённого SDK с Xcode 27.2; точная область — `ios-check/Podfile`.
+Проверки нашего модуля сохраняют `-Werror`; предупреждения не скрываются,
+runtime-исходники не меняются. Владелец: Lynx Lab; обнаружено 2026-11-18;
+пересмотр до 2026-12-18 или при смене Lynx/Xcode, до merge при истечении срока.

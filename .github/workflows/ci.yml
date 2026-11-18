@@ -65,7 +65,8 @@ jobs:
 
   ios:
     name: Objective-C format, compile and static analysis
-    runs-on: macos-15
+    # Xcode 27.2 matches the local compiler; pin it instead of the image default.
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
@@ -73,7 +74,7 @@ jobs:
           bun-version: 1.4.0
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: '27.2'
       - name: Install pinned formatter locally
         run: |
           python3 -m venv .tools/clang-format
@@ -88,7 +89,7 @@ jobs:
           BUNDLE_FROZEN=true bundle install
           bundle exec ruby generate-project.rb
           bundle exec pod install --deployment
-          xcodebuild -workspace LifecycleCheck.xcworkspace -scheme LifecycleCheck -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -workspace LifecycleCheck.xcworkspace -scheme LifecycleCheck -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0 build
       - run: bun run check:ios
         env:
           LYNX_FRAMEWORKS_DIR: ios-check/build/Build/Products/Debug-iphoneos
